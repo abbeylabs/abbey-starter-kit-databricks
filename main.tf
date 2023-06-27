@@ -47,7 +47,7 @@ resource "abbey_grant_kit" "databricks_pii_group" {
     steps = [
       {
         reviewers = {
-          one_of = ["jeff@abbey.io", "arvil@abbey.so"]
+          one_of = ["replace-me@example.com", "replace-me@example.com"]
         }
       }
     ]
