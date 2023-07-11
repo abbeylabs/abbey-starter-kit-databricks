@@ -54,22 +54,20 @@ resource "abbey_grant_kit" "databricks_pii_group" {
     ]
   }
 
-  policies = {
-    grant_if = [
-      {
-        query = <<-EOT
-          package main
+  policies = [
+    {
+      query = <<-EOT
+        package main
 
-          import data.abbey.functions
+        import data.abbey.functions
 
-          allow[msg] {
-            true; functions.expire_after("72h")
-            msg := "granting access for 3 days"
-          }
-        EOT
-      }
-    ]
-  }
+        allow[msg] {
+          true; functions.expire_after("72h")
+          msg := "granting access for 3 days"
+        }
+      EOT
+    }
+  ]
 
   output = {
     location = "github://organization/repo/access.tf"
