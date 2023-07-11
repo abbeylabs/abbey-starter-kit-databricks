@@ -9,7 +9,9 @@ jobs:
   materialize:
     runs-on: ubuntu-latest
     env:
-      ABBEY_TOKEN: ${{ secrets.ABBEY_TOKEN }}
+      TF_VAR_abbey_token: ${{ secrets.ABBEY_TOKEN }}
+      TF_VAR_databricks_host: ${{ secrets.DATABRICKS_HOST }}
+      TF_VAR_databricks_token: ${{ secrets.DATABRICKS_TOKEN }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -23,16 +25,12 @@ jobs:
         id: init
         run: terraform init
         env:
-          TF_HTTP_USERNAME: databricks_playground_1
+          TF_HTTP_USERNAME: databricks_playground
           TF_HTTP_PASSWORD: ${{ secrets.ABBEY_TOKEN }}
-          TF_VAR_databricks_host: ${{ secrets.DATABRICKS_HOST }}
-          TF_VAR_databricks_token: ${{ secrets.DATABRICKS_TOKEN }}
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -auto-approve -input=false
         env:
-          TF_HTTP_USERNAME: databricks_playground_1
+          TF_HTTP_USERNAME: databricks_playground
           TF_HTTP_PASSWORD: ${{ secrets.ABBEY_TOKEN }}
-          TF_VAR_databricks_host: ${{ secrets.DATABRICKS_HOST }}
-          TF_VAR_databricks_token: ${{ secrets.DATABRICKS_TOKEN }}
