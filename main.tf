@@ -10,7 +10,7 @@ terraform {
   required_providers {
     abbey = {
       source = "abbeylabs/abbey"
-      version = "0.2.2"
+      version = "0.2.4"
     }
 
     databricks = {
@@ -72,31 +72,22 @@ resource "abbey_grant_kit" "databricks_pii_group" {
   output = {
     location = "github://organization/repo/access.tf"
     append = <<-EOT
-      resource "databricks_group_member" "group_member_{{ .data.system.abbey.secondary_identities.databricks.tf_resource_id }}" {
+      resource "databricks_group_member" "group_member_{{ .data.system.abbey.identities.databricks.tf_resource_id }}" {
         group_id  = ${databricks_group.pii_group.id}
-        member_id = {{ .data.system.abbey.secondary_identities.databricks.tf_resource_id }}
+        member_id = {{ .data.system.abbey.identities.databricks.tf_resource_id }}
       }
     EOT
   }
 }
 
 resource "abbey_identity" "user_1" {
-  name = "replace-me"
-
-  linked = jsonencode({
-    abbey = [
-      {
-        type  = "AuthId"
-        value = "replace-me@example.com"
-      }
-    ]
-
-    databricks = [
-      {
-        tf_resource_id = databricks_user.replace_me_user.id
-        tf_state_name = "databricks_playground_1"
-        user_name = databricks_user.replace_me_user.user_name
-      }
-    ]
-  })
+  abbey_account = "replace-me@example.com"
+  source = "databricks"
+  metadata = jsonencode(
+    {
+      tf_resource_id = databricks_user.replace_me_user.id
+      tf_state_name = "databricks_playground_1"
+      user_name = databricks_user.replace_me_user.user_name
+    }
+  )
 }
