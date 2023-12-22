@@ -1,33 +1,9 @@
-terraform {
-  backend "http" {
-    address        = "https://api.abbey.io/terraform-http-backend"
-    lock_address   = "https://api.abbey.io/terraform-http-backend/lock"
-    unlock_address = "https://api.abbey.io/terraform-http-backend/unlock"
-    lock_method    = "POST"
-    unlock_method  = "POST"
-  }
+locals {
+  account_name = ""
+  repo_name = ""
 
-  required_providers {
-    abbey = {
-      source = "abbeylabs/abbey"
-      version = "0.2.4"
-    }
-
-    databricks = {
-      source = "databricks/databricks"
-      version = "1.14.3"
-    }
-  }
-}
-
-provider "abbey" {
-  # Configuration options
-  bearer_auth = var.abbey_token
-}
-
-provider "databricks" {
-  host = var.databricks_host
-  token = var.databricks_token
+  project_path = "github://${local.account_name}/${local.repo_name}"
+  policies_path = "${local.project_path}/policies"
 }
 
 resource "databricks_group" "pii_group" {
@@ -48,46 +24,23 @@ resource "abbey_grant_kit" "databricks_pii_group" {
     steps = [
       {
         reviewers = {
-          one_of = ["replace-me@example.com", "replace-me@example.com"]
+          one_of = ["replace-me@example.com"]
         }
       }
     ]
   }
 
   policies = [
-    {
-      query = <<-EOT
-        package main
-
-        import data.abbey.functions
-
-        allow[msg] {
-          true; functions.expire_after("72h")
-          msg := "granting access for 3 days"
-        }
-      EOT
-    }
+    { bundle = local.policies_path }
   ]
 
   output = {
-    location = "github://organization/repo/access.tf"
+    location = "${local.project_path}/access.tf"
     append = <<-EOT
-      resource "databricks_group_member" "group_member_{{ .data.system.abbey.identities.databricks.tf_resource_id }}" {
-        group_id  = ${databricks_group.pii_group.id}
-        member_id = {{ .data.system.abbey.identities.databricks.tf_resource_id }}
+      resource "databricks_group_member" "group_member_{{ .user.databricks.tf_resource_id }}" {
+        group_id  = databricks_group.pii_group.id
+        member_id = {{ .user.databricks.tf_resource_id }}
       }
     EOT
   }
-}
-
-resource "abbey_identity" "user_1" {
-  abbey_account = "replace-me@example.com"
-  source = "databricks"
-  metadata = jsonencode(
-    {
-      tf_resource_id = databricks_user.replace_me_user.id
-      tf_state_name = "databricks_playground_1"
-      user_name = databricks_user.replace_me_user.user_name
-    }
-  )
 }
